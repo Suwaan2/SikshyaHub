@@ -1,5 +1,5 @@
 import { Webhook } from "svix";
-import User from "../models/User";
+import User from "../models/User.js";
 
 //API controller function to manage clerk user with database
 
@@ -14,7 +14,7 @@ export const clerkWebhooks = async (req, res) => {
         })
         const {data, type} = req.body;
         switch (type) {
-            case "user.created": {
+            case 'user.created': {
 
                 const userData = {
                     _id: data.id,

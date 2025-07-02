@@ -5,12 +5,14 @@ import connectDb from './configs/mongodb.js';
 import { clerkWebhooks } from './controllers/webHook.js';
 import educatorRouter from './routes/educatorRoute.js';
 import { clerkMiddleware } from '@clerk/express';
+import connectCloudinary from './configs/cloudinary.js';
 
 //Initialize Express app and connect to MongoDB
 const app = express();
 
 //Connect to Database
 await connectDb();
+await connectCloudinary();
 //Port configuration
 const PORT = process.env.PORT || 5000;
 

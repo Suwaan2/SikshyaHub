@@ -1,6 +1,7 @@
-import { clerkClient } from '@clerk/express';
+import { clerkClient, User } from '@clerk/express';
 import { v2 as cloudinary } from 'cloudinary';
-import Course from '../models/Course';
+import Course from '../models/Course.js';
+import { Purchase } from '../models/purchase.js';
 // API controller function to update user role to educator
 // This function updates the user's role to 'educator' in their public metadata
 export const updateRoleToEducator = async (req, res) => {
@@ -45,3 +46,56 @@ export const addCourse = async (req, res) =>{
         res.json({success:false, message:error.message})
     }
 }
+//Get Educator Courses 
+
+export const getEducatorCourses = async(req, res)=>{
+    try {
+        const educator = req.auth.userId
+
+        const course = await Course.find({educator})
+        res.json({success:true, course})
+    } catch (error) {
+        res.json({success:false, message:error.message})
+    }
+}
+
+//Get Educator Dashboard 
+
+export const educatorDashboardData = async()=>{
+    try {
+        const educator = req.auth.userId;
+        const courses = await Course.find({educator})
+        const totalCourses = courses.length;
+        //Getting all the courses with ids
+        const courseIds = courses.map(course => course._id)
+        //Calculating the total earning 
+        const purchase = await Purchase.find({
+            courseId:{$in: courseIds},
+            status: 'completed'
+        });
+
+        const totalEarning = purchase.reduce((sum, purchase)=> sum + purchase.amount, 0);
+
+        //Collect unique enrolled student id with their course title
+
+        const enrolledStudentData = [];
+        for(const course of courses){
+            const students = await User.find({
+                _id: {$in: course.enrolledStudents}
+            }, 'name imageUrl')
+        students.forEach(student=>{
+            enrolledStudentData.push({
+                courseTitle: course.courseTitle,
+                student
+            })
+        })    
+        }
+        res.json({success:true, dashboardData:{
+            totalEarning, enrolledStudentData, totalCourses
+        }})
+    } catch (error) {
+        res.json({success:false, message:error.message})
+    }
+}
+
+//Getting Enrolled Student data with purchase data
